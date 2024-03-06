@@ -4,6 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "plugin.h"
+
 #define SHELL "lsh"
 #define VERSION "lsh (Lightweight Shell) 0.1"
 
@@ -42,7 +44,7 @@ char *replaceWord(const char *s, const char *oldW, const char *newW) {
 void handle_singal(int sig) {
   char dir[256];
   char *result = NULL;
-  char s[100]; 
+  char s[100];
   char *user = getenv("USER");
   if (user != NULL) {
     strcpy(dir, "/home/");
@@ -54,12 +56,17 @@ void handle_singal(int sig) {
   printf("Use \"exit\" command\n");
 }
 
+void help() {
+  puts("help\tprint the help menu"
+       "\nverison\toutput version information\n");
+}
+
 int main() {
   char var[50];
   char *result = NULL;
   char dir[256];
   char *user = getenv("USER");
-  char s[100]; 
+  char s[100];
 
   char tags;
 
@@ -86,10 +93,10 @@ int main() {
       var[len - 1] = '\0';
     }
 
-    if (strcmp(var, "lsh help") == 0) {
-      printf(
-          "help\tprint the help menu\nverison\toutput version information\n");
+    plugins();
 
+    if (strcmp(var, "lsh help") == 0) {
+      help();
     } else if (strcmp(var, "help") == 0) {
       printf("Do you mean lsh help?\n");
     } else if (strcmp(var, "lsh version") == 0) {
@@ -98,10 +105,7 @@ int main() {
       return 0;
     } else if (strcmp(var, "ls") == 0) {
       system("ls --color");
-
     } else if (strcmp(var, "cd") == 0) {
-
-
       chdir("..");
     } else {
       strcat(var, " 2>/dev/null");
