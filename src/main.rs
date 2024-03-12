@@ -1,8 +1,10 @@
 const YELLOW: &str = "\x1b[0;33m";
 const RESET: &str = "\x1b[0m";
+const VERSION: &str = "hsh (Hubschluft Shell) 0.2v";
 
 use std::env;
 use std::io::{self, Write};
+use std::path::Path;
 use std::process::{Command, Stdio};
 
 fn main() {
@@ -44,6 +46,25 @@ fn main() {
         let command = parts.next().expect("No command entered");
         let args: Vec<&str> = parts.collect();
 
+        if command == "exit" {
+            break;
+        } else if command == "cd" {
+            let new_dir = args.first().map_or("/", |&x| x);
+            let root = Path::new(new_dir);
+            if let Err(e) = env::set_current_dir(&root){
+                eprintln!("{}", e);
+            }
+            continue;
+        } else if command == "help"{
+            let help: &str = r#"
+help    print the help menu
+version output version information
+            "#;
+            println!("{}", help)
+        } else if command == "version"{
+            println!("{}", VERSION)
+        } 
+
         match Command::new(command)
             .args(args)
             .stdin(Stdio::inherit())
@@ -58,5 +79,6 @@ fn main() {
                 println!("Failed to execute command: {}", e);
             }
         }
+
     }
 }
