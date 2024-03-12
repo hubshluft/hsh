@@ -1,10 +1,12 @@
-use std::env;
-use std::io::{self, Write};
-use std::path::PathBuf;
-use std::process::Command; 
-
 const YELLOW: &str = "\x1b[0;33m";
 const RESET: &str = "\x1b[0m";
+
+// TODO: the ability to execute TUI software
+
+use std::env;
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() {
     loop {
@@ -18,10 +20,15 @@ fn main() {
             Err(_) => panic!("Failed to get current directory"),
         };
 
+        let path_str = path.to_string_lossy();
+        let old_v = path_str.replace("/home/", "~/");
+
         print!(
             "{YELLOW}{}{RESET}@{YELLOW}{}{RESET} $ ",
             user,
-            path.display()
+            old_v,
+            YELLOW = YELLOW,
+            RESET = RESET
         );
         io::stdout().flush().expect("Failed to flush stdout");
 
@@ -41,13 +48,11 @@ fn main() {
         let args: Vec<&str> = parts.collect();
 
         let command_path = PathBuf::from(command);
-        let output = Command::new(command_path)
-            .args(args)
-            .output();
+        let output = Command::new(command_path).args(args).output();
 
-        match output{
-            Ok(output) =>{
-                if output.status.success(){
+        match output {
+            Ok(output) => {
+                if output.status.success() {
                     let output_stdout = String::from_utf8_lossy(&output.stdout);
                     println!("{}", output_stdout);
                 } else {
@@ -55,7 +60,7 @@ fn main() {
                     println!("{}", output_stderr);
                 }
             }
-            Err(e) =>{
+            Err(e) => {
                 println!("Failed to execute command: {}", e);
             }
         }
