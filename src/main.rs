@@ -1,12 +1,9 @@
 const YELLOW: &str = "\x1b[0;33m";
 const RESET: &str = "\x1b[0m";
 
-// TODO: the ability to execute TUI software
-
 use std::env;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 fn main() {
     loop {
@@ -47,18 +44,15 @@ fn main() {
         let command = parts.next().expect("No command entered");
         let args: Vec<&str> = parts.collect();
 
-        let command_path = PathBuf::from(command);
-        let output = Command::new(command_path).args(args).output();
-
-        match output {
-            Ok(output) => {
-                if output.status.success() {
-                    let output_stdout = String::from_utf8_lossy(&output.stdout);
-                    println!("{}", output_stdout);
-                } else {
-                    let output_stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("{}", output_stderr);
-                }
+        match Command::new(command)
+            .args(args)
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .spawn()
+        {
+            Ok(mut child) => {
+                child.wait().expect("Failed to wait for child process");
             }
             Err(e) => {
                 println!("Failed to execute command: {}", e);
