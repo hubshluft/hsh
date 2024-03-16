@@ -1,7 +1,3 @@
-const YELLOW: &str = "\x1b[0;33m";
-const RESET: &str = "\x1b[0m";
-const VERSION: &str = "hsh (Hubschluft Shell) 0.2v";
-
 use std::env;
 use std::io::{self, Write};
 use std::path::Path;
@@ -9,16 +5,31 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+mod plugin;
+
+const YELLOW: &str = "\x1b[0;33m";
+const RESET: &str = "\x1b[0m";
+const VERSION: &str = "hsh (Hubschluft Shell) 0.2v";
+
 mod config {
-    use std::process::{Child, Command};
-    pub fn shortcuts(command: &str) -> Result<Child, std::io::Error> {
-        if command == "cr" {
-            Command::new("cargo").arg("run").spawn()
+    use std::process::{Command, Stdio};
+    pub fn shortcuts(command: &str, args: &[&str]) -> Result<bool, std::io::Error> {
+        if command == "pacin" {
+            let mut cmd = Command::new("sudo");
+            cmd.arg("pacman").arg("-S").args(args);
+
+            match cmd.stdin(Stdio::inherit())
+                     .stdout(Stdio::inherit())
+                     .stderr(Stdio::inherit())
+                     .spawn() {
+                Ok(mut child) => {
+                    child.wait()?;
+                    Ok(true) 
+                }
+                Err(e) => Err(e), 
+            }
         } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Unknown command",
-            ))
+            Ok(false)
         }
     }
 }
@@ -89,22 +100,28 @@ version output version information
             println!("{}", VERSION)
         }
 
-        let _ = config::shortcuts(command);
-
-        match Command::new(command)
-            .args(args)
-            .stdin(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .spawn()
-        {
-            Ok(mut child) => {
-                child.wait().expect("Failed to wait for child process");
+        match config::shortcuts(command, &args) {
+            Ok(false) => {
+                match Command::new(command)
+                    .args(&args)
+                    .stdin(Stdio::inherit())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .spawn() {
+                    Ok(mut child) => {
+                        child.wait().expect("Failed to wait for child process");
+                    }
+                    Err(e) => {
+                        println!("Failed to execute command: {}", e);
+                    }
+                }
             }
             Err(e) => {
                 println!("Failed to execute command: {}", e);
             }
+            _ => {}
         }
+
         while running.load(Ordering::SeqCst) {
             continue;
         }
