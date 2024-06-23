@@ -2,7 +2,7 @@
 
 A lightweight shell for Unix-like operating systems (focused on Hubshluft Linux), made with love and Golang. [In development]
 
-### Operating system compatibility
+## Operating system compatibility
 
 | OS             | Status  |
 | :------------- | :-----: |
