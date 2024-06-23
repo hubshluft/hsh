@@ -18,9 +18,11 @@ A lightweight shell for Unix-like operating systems (focused on Hubshluft Linux)
 
 Use `make` to build `hsh`.
 
+```bash
 git clone https://github.com/hubshluft/hsh.git
 cd hsh
 make
+```
 
 ## Dependencies
 
